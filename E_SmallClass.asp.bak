@@ -1,0 +1,893 @@
+<!--#include file="conn.asp"-->
+<!--#include file="config.asp"-->
+<!--#include file="function.asp"-->
+<!--#include file="char.inc"-->
+<%
+E_typeid=ChkRequest(request("E_typeid"),1)	'防注入
+request_E_BigClassID=ChkRequest(Request.QueryString("E_BigClassID"),1)	'防注入
+request_E_SmallClassID=ChkRequest(Request.QueryString ("E_SmallClassID"),1)	'防注入
+if E_typeid="" or request_E_BigClassID="" or request_E_SmallClassID="" then
+	Response.Write "<script>alert('未指定参数');history.back()</script>"
+	response.end
+else
+	if not IsNumeric(request_E_SmallClassID) or not IsNumeric(request_E_BigClassID) or not IsNumeric(E_typeid) then
+		response.write "<script>alert('非法参数');history.back()</script>"
+		response.end
+	else
+		set rs=server.CreateObject("ADODB.RecordSet")
+		rsSource="select * from "& db_EC_BigClass_Table &" where E_BigClassID=" & request_E_BigClassID &" order by E_bigclassorder"
+		rs.Open rsSource,conn,1,1
+		E_BigClassName=rs("E_BigClassName")
+		E_bigclassorder=rs("E_bigclassorder")
+		bigclasszs=rs("bigclasszs")
+		rs.close
+		set rs=nothing
+
+		set rs=server.CreateObject("ADODB.RecordSet")
+		rsSource="select * from "& db_EC_SmallClass_Table &" where E_SmallClassID=" & request_E_SmallClassID &" order by smallClassorder"
+		rs.Open rsSource,conn,1,1
+		E_smallclassname=rs("E_smallclassname")
+		smallclassorder=rs("smallclassorder")
+		rs.close
+		set rs=nothing
+
+		PageShowSize = 10            '每页显示多少个页
+		MyPageSize   = 40           '每页显示多少条新闻
+			
+		If Not IsNumeric(Request("page")) Or IsEmpty(Request("page")) Or Request("page") <=0 Then
+			MyPage=1
+		Else
+			MyPage=Int(Abs(Request("page")))
+		End if
+	end if
+
+	set rs=server.CreateObject("ADODB.RecordSet")
+	rsSource="select * from "& db_EC_BigClass_Table &" where E_typeid=" & E_typeid &" order by E_bigclassorder"
+	rs.Open rsSource,conn,1,1
+
+	dim ArrayE_BigClassID(),ArrayE_BigClassName()
+	ReDim ArrayE_BigClassID(int(rs.RecordCount)),ArrayE_BigClassName(int(rs.RecordCount))
+	BigClassCount=rs.RecordCount
+	for i=1 to BigClassCount
+		ArrayE_BigClassID(i)=rs("E_BigClassID")
+		ArrayE_BigClassName(i)=trim(rs("E_BigClassName"))
+		rs.MoveNext
+	next
+	rs.close
+	set rs=nothing
+
+	set rs2=server.CreateObject("ADODB.RecordSet")  '专题
+	rs2.Source="select Top "& top_sp &" * from "& db_EC_Special_Table &"  order by SpecialID DESC "
+	rs2.Open rs2.Source,conn,1,1
+
+	set rs4=server.CreateObject("Adodb.RecordSet")
+	rs4.source="select * from "& db_EC_SmallClass_Table &" Where E_BigClassID=" & request_E_BigClassID &" order by SmallClassorder"
+	rs4.open rs4.source,conn,1,1
+	SmallClassCount=rs4.RecordCount
+	dim ArrayE_SmallClassID(10000),ArrayE_smallclassname(10000)
+	for i=1 to SmallClassCount
+		ArrayE_SmallClassID(i)=rs4("E_SmallClassID")
+		ArrayE_smallclassname(i)=trim(rs4("E_smallclassname"))
+		rs4.MoveNext
+	next
+	rs4.Close
+	set rs4=nothing
+%>
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=gb2312">
+<title><%=E_smallclassname%>__<%=E_BigClassName%>__<%=eChSys%></title>
+<LINK href="news.css" rel="stylesheet">
+</head>
+<body>
+<!--#include file="other_Top.asp"-->
+<table width="780" height="400" border="0" align="center" cellpadding="0" cellspacing="0">
+  <tr>
+    <td width="210" valign="top" bgcolor="F1F7FC"><table width="100%" border="0" cellspacing="0" cellpadding="0">
+      <!--总栏顺序号标记-->
+      <%
+dim E_typeorder
+set rs8=server.CreateObject("ADODB.RecordSet")
+rs8.Source="select * from "& db_EC_Type_Table &" where E_typeid=" & E_typeid &" order by E_typeorder"
+rs8.Open rs8.Source,conn,1,1
+E_typeorder=rs8("E_typeorder")
+rs8.Close
+set rs8=nothing
+%>
+      <!--总栏顺序号标记-->
+      <tr>
+        <td height="50" align="center" valign="middle" background="IMAGES/type_dh.gif" class="yellow_title"><img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;<%=E_smallclassname%>·小类 <%=E_typeorder%>-<%=E_bigclassorder%>-<%=smallclassorder%></td>
+      </tr>
+      <%
+set rs6=server.CreateObject("ADODB.RecordSet")
+rs6.Source="select * from "& db_EC_SmallClass_Table &" where E_BigClassID="&request_E_BigClassID&" order by SmallClassorder"
+rs6.Open rs6.Source,conn,1,1
+do while not rs6.eof%>
+      <tr>
+        <td align=center valign="middle"><a  class="blacklink" href="E_SmallClass.asp?E_typeid=<%=E_typeid%>&E_BigClassID=<%=rs6("E_BigClassID")%>&E_SmallClassID=<%=rs6("E_SmallClassID")%>"><%=rs6("E_smallclassname")%></a></td>
+      </tr>
+      <%rs6.movenext
+loop
+rs6.Close
+set rs6=nothing
+%>
+      <tr>
+        <td height="50" valign="middle" background="Images/type_dh.gif" class="top"><div align="center" class="yellow_title"><img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;本月最新</div></td>
+      </tr>
+      <tr>
+        <td><%
+dim ii
+ii = 0
+if uselevel=1 then
+	if Request.cookies(eChsys)("key")="" then
+		rsSource="select top " & top_txt & " * from "& db_EC_News_Table &" where year(updatetime)="& year(now()) &" and month(updatetime)="& month(now())&" and checkked=1 and E_typeid="&E_typeid&"  order by click DESC,newsid desc"   '选择本月
+	end if
+	if Request.cookies(eChsys)("key")="selfreg" then
+		if Request.cookies(eChsys)("reglevel")=3 then
+			rsSource="select top " & top_txt & " * from "& db_EC_News_Table &" where year(updatetime)="& year(now()) &"  and month(updatetime)="& month(now())&"  and checkked=1 and E_typeid="&E_typeid&" order by click DESC,newsid desc"   '选择本月
+		end if
+		if Request.cookies(eChsys)("reglevel")=2 then
+			rsSource="select top " & top_txt & " * from "& db_EC_News_Table &" where year(updatetime)="& year(now()) &" and month(updatetime)="& month(now()) &" and checkked=1 and E_typeid="&E_typeid&" order by click DESC,newsid desc"   '选择本月
+		end if
+		if Request.cookies(eChsys)("reglevel")=1 then
+			rsSource="select top " & top_txt & " * from "& db_EC_News_Table &" where year(updatetime)="& year(now()) &" and month(updatetime)="& month(now()) &" and checkked=1 and E_typeid="&E_typeid&" order by click DESC,newsid desc"   '选择本月
+		end if
+	end if
+	if Request.cookies(eChsys)("key")="super" or Request.cookies(eChsys)("key")="typemaster" or Request.cookies(eChsys)("key")="bigmaster" or Request.cookies(eChsys)("key")="smallmaster" or Request.cookies(eChsys)("key")="check" then
+		rsSource="select top " & top_txt & " * from "& db_EC_News_Table &" where year(updatetime)="& year(now()) &" and month(updatetime)="& month(now()) &" and checkked=1 and E_typeid="&E_typeid&" order by click DESC,newsid desc"   '选择本月
+	end if
+else
+	rsSource="select top "& top_txt &" * from "& db_EC_News_Table 
+	' &" where year(updatetime)=year(now()) and month(updatetime)=month(now()) and checkked=1 and E_typeid="&E_typeid&" order by click DESC,newsid desc"   '选择本月
+end if
+
+set rs=server.CreateObject("ADODB.RecordSet")
+rs.Open rsSource,conn,1,3
+if rs.bof and rs.eof then 
+	response.write "<br><div align=center>本月无更新<div>" 
+else 
+	do while not rs.eof 
+	title=htmlencode4(trim(rs("title")))
+%>
+          &nbsp;·
+          <%
+E_typeid=checkstr(request("E_typeid"))
+set rs11=server.CreateObject("ADODB.RecordSet")
+rs11.Source="select * from "& db_EC_Type_Table &" where E_typeid="&E_typeid&" order by E_typeorder"
+rs11.Open rs11.Source,conn,1,1
+mode=rs11("mode")
+rs11.close
+set rs11=nothing%>
+          <%if mode<>4 then%>
+          <%if mode="2" then%>
+          <%if rs("picname")<>"" then%>
+          <font class=pic_word>[图]</font>
+          <%end if%>
+          <%end if%>
+          <a class=middle href="E_ReadNews.asp?NewsID=<%=rs("NewsID")%>" title="<%=title%>" target="_blank"> <font color="<%=rs("titlecolor")%>"><%=gottopic(title,14)%></font></a><font color="#FF0000"> <%=rs("click")%></font>
+          <%else%>
+          <%if mode="2" then%>
+          <%if rs("picname")<>"" then%>
+          <font class=pic_word>[图]</font>
+          <%end if%>
+          <%end if%>
+          <a class=middle href="E_ReadNews.asp?NewsID=<%=rs("NewsID")%>" title="<%=title%>" target="_blank"> <font color="<%=rs("titlecolor")%>"><%=gottopic(title,12)%></font></a><font color="#FF0000"> <%=rs("click")%></font>
+          <%end if%>
+          <br>
+          <%  
+	ii = ii + 1
+    if ii>50 then exit do
+	rs.movenext     
+	loop
+	end if  
+	rs.close   
+	set rs=nothing
+%>
+        </td>
+      </tr>
+    </table></td>
+    <td width="570" valign="top" bgcolor="#FFFFFF" class="white_link"><div align="center">
+      <table width="100%" border="0" cellpadding="0" cellspacing="0">
+        <tr>
+          <td height="25" background="Images/dh_bg.gif"><%
+  dim E_typename
+  
+set rs5=server.CreateObject("ADODB.RecordSet")
+rs5.Source="select * from "& db_EC_Type_Table &" where E_typeid=" & E_typeid &" order by E_typeorder"
+rs5.Open rs5.Source,conn,1,1
+E_typename=rs5("E_typename")
+rs5.Close
+set rs5=nothing
+
+%>
+            &nbsp;&nbsp;&nbsp;<img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;&nbsp; <%=bigclasszs%>栏目导航 <a class="daohang" href="./" >网站首页</a>&gt;&gt;<a class=daohang href="E_Type.asp?E_typeid=<%=E_typeid%>"><%=E_typename%></a>&gt;&gt;<a class="daohang" href='E_BigClass.asp?E_typeid=<%=E_typeid%>&E_BigClassID=<%=request_E_BigClassID%>'><%=E_BigClassName%></a>&gt;&gt;<%=E_smallclassname%></td>
+        </tr>
+        <tr>
+          <td><div align="center">
+            <script language=javascript src=./zongg/ad.asp?i=14></script>
+          </div></td>
+        </tr>
+      </table>
+      <!--模版开始-->
+      <% select case bigclasszs %>
+      <% case "1" %>
+      <!--图片模版-->
+      <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+%>
+      <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber4">
+        <tr>
+          <td height="25" background="Images/dh_bg.gif" class="daohang">&nbsp;&nbsp;&nbsp;<img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;&nbsp;<%=E_smallclassname%></td>
+        </tr>
+        <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+if uselevel=1 then
+if Request.cookies(eChsys)("key")="super" or Request.cookies(eChsys)("key")="typemaster" or Request.cookies(eChsys)("key")="bigmaster" or Request.cookies(eChsys)("key")="smallmaster" or Request.cookies(eChsys)("key")="check" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="selfreg" then
+	if Request.cookies(eChsys)("reglevel")=3 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=2 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=1 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+end if
+else
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+rs3.Open rs3.Source,conn,1,1
+
+if not rs3.EOF then
+Rs3.PageSize     = MyPageSize
+MaxPages         = Rs3.PageCount
+Rs3.absolutepage = MyPage
+total            = Rs3.RecordCount
+i = 0
+
+%>
+        <tr>
+          <td><table width="90%" border="0" cellspacing="0" cellpadding="0" align="center">
+            <!--图片换行显示1-->
+            <% do until rs3.Eof or i = rs3.PageSize %>
+            <tr>
+              <%
+fileExt=lcase(getFileExtName(rs3("picname")))
+Content=htmlencode4(rs3("Content"))
+content=replace(content,"[---分页---]","")
+%>
+              <% if not rs3.EOF then %>
+              <td width=25% align=center valign="top" style="table-layout:fixed; word-break:break-all"><div align="center">
+                <% content=htmlencode4(rs3("Content"))
+                       content=replace(content,"[---分页---]","")%>
+                <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=CutStr(nohtml(Content),150)%>">
+                  <%if   rs3("picname")=("") then%>
+                  <img  src="IMAGES/flashorno.gif" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                  <%else%>
+                  <%if fileext="jpg" or fileext="bmp" or fileext="png" or fileext="gif" then%>
+                  <img  src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                  <%end if%>
+                  <%if fileext="swf" then%>
+                  <object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'  codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width="110" height="80" border=0 >
+                    <param name=movie value="<%=FileUploadPath & rs3("picname")%>">
+                    <param name=quality value=high>
+                    <param name='Play' value='-1'>
+                    <param name='Loop' value='0'>
+                    <param name='Menu' value='-1'>
+                    <embed src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=0  pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash'></embed>
+                  </object>
+                  <%end if%>
+                  <%end if%>
+                  </a><br>
+                <br>
+                <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=htmlencode4(rs3("title"))%>"> <%=CutStr(rs3("title"),18)%> </a> </div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+              <!--图片换行显示2-->
+              <td width=25% align=center valign="top" style="table-layout:fixed; word-break:break-all"><% if not rs3.EOF then %>
+                      <div align="center">
+                        <%
+fileExt=lcase(getFileExtName(rs3("picname")))
+Content=htmlencode4(rs3("Content"))
+content=replace(content,"[---分页---]","")
+%>
+                        <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=CutStr(nohtml(Content),150)%>">
+                        <%if rs3("picname")=("") then%>
+                        <img  src="IMAGES/flashorno.gif" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%else%>
+                        <%if fileext="jpg" or fileext="bmp" or fileext="png" or fileext="gif" then%>
+                        <img  src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%end if%>
+                        <%if fileext="swf" then%>
+                        <object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'  codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width="110" height="80" border=0 >
+                          <param name=movie value="<%=FileUploadPath & rs3("picname")%>">
+                          <param name=quality value=high>
+                          <param name='Play' value='-1'>
+                          <param name='Loop' value='0'>
+                          <param name='Menu' value='-1'>
+                          <embed src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=0  pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash'></embed>
+                        </object>
+                        <%end if%>
+                        <%end if%>
+                        </a><br>
+                        <br>
+                    <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=htmlencode4(rs3("title"))%>"> <%=CutStr(rs3("title"),18)%> </a> </div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+              <!--图片换行显示3-->
+              <td width=25% align=center valign="top" style="table-layout:fixed; word-break:break-all"><% if not rs3.EOF then %>
+                      <div align="center">
+                        <%
+fileExt=lcase(getFileExtName(rs3("picname")))
+Content=htmlencode4(rs3("Content"))
+content=replace(content,"[---分页---]","")
+%>
+                        <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=CutStr(nohtml(Content),150)%>">
+                        <%if rs3("picname")=("") then%>
+                        <img  src="IMAGES/flashorno.gif" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%else%>
+                        <%if fileext="jpg" or fileext="bmp" or fileext="png" or fileext="gif" then%>
+                        <img  src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%end if%>
+                        <%if fileext="swf" then%>
+                        <object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'  codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width="110" height="80" border=0 >
+                          <param name=movie value="<%=FileUploadPath & rs3("picname")%>">
+                          <param name=quality value=high>
+                          <param name='Play' value='-1'>
+                          <param name='Loop' value='0'>
+                          <param name='Menu' value='-1'>
+                          <embed src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=0  pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash'></embed>
+                        </object>
+                        <%end if%>
+                        <%end if%>
+                        </a><br>
+                        <br>
+                    <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=htmlencode4(rs3("title"))%>"> <%=CutStr(rs3("title"),18)%> </a> </div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+              <!--图片换行显示4-->
+              <td width=25% align=center valign="top" style="table-layout:fixed; word-break:break-all"><% if not rs3.EOF then %>
+                      <div align="center">
+                        <%
+fileExt=lcase(getFileExtName(rs3("picname")))
+Content=htmlencode4(rs3("Content"))
+content=replace(content,"[---分页---]","")
+%>
+                        <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=CutStr(nohtml(Content),150)%>">
+                        <%if rs3("picname")=("") then%>
+                        <img  src="IMAGES/flashorno.gif" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%else%>
+                        <%if fileext="jpg" or fileext="bmp" or fileext="png" or fileext="gif" then%>
+                        <img  src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=1 style=border-color:#000000 align=top>
+                        <%end if%>
+                        <%if fileext="swf" then%>
+                        <object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'  codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width="110" height="80" border=0 >
+                          <param name=movie value="<%=FileUploadPath & rs3("picname")%>">
+                          <param name=quality value=high>
+                          <param name='Play' value='-1'>
+                          <param name='Loop' value='0'>
+                          <param name='Menu' value='-1'>
+                          <embed src="<%=FileUploadPath & rs3("picname")%>" width="110" height="80" border=0  pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash'></embed>
+                        </object>
+                        <%end if%>
+                        <%end if%>
+                        </a><br>
+                        <br>
+                    <a class=middle href="E_ReadNews.asp?NewsID=<%=rs3("NewsID")%>" target=_blank title="<%=htmlencode4(rs3("title"))%>"> <%=CutStr(rs3("title"),18)%> </a> </div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+            </tr>
+            <!--图片换行结束-->
+            <%loop%>
+          </table></td>
+        </tr>
+        <tr>
+          <td><TABLE cellSpacing=0 cellPadding=3 width="100%" align=center border=0 >
+            <tr>
+              <td width="100%" align=center valign="middle">共 <%=total%> 条，当前第 <%=Mypage%>/<%=Maxpages%> 页，每页 <%=MyPageSize%> 条
+                <%
+url="E_SmallClass.asp?E_typeid=" & E_typeid & "&E_BigClassID=" & request_E_BigClassID & "&E_SmallClassID=" & request_E_SmallClassID
+PageNextSize=int((MyPage-1)/PageShowSize)+1
+Pagetpage=int((total-1)/rs3.PageSize)+1
+
+if PageNextSize >1 then
+PagePrev=PageShowSize*(PageNextSize-1)
+Response.write "<a class=black href='" & Url & "&page=" & PagePrev & "' title='上" & PageShowSize & "页'>上一翻页</a> "
+Response.write "<a class=black href='" & Url & "&page=1' title='第1页'>页首</a> "
+end if
+if MyPage-1 > 0 then
+Prev_Page = MyPage - 1
+Response.write "<a class=black href='" & Url & "&page=" & Prev_Page & "' title='第" & Prev_Page & "页'>上一页</a> "
+end if
+
+if Maxpages>=PageNextSize*PageShowSize then
+PageSizeShow = PageShowSize
+Else
+PageSizeShow = Maxpages-PageShowSize*(PageNextSize-1)
+End if
+If PageSizeShow < 1 Then PageSizeShow = 1
+for PageCounterSize=1 to PageSizeShow
+PageLink = (PageCounterSize+PageNextSize*PageShowSize)-PageShowSize
+if PageLink <> MyPage Then
+Response.write "<a class=black href='" & Url & "&page=" & PageLink & "'>[" & PageLink & "]</a> "
+else
+
+
+Response.Write "<B>["& PageLink &"]</B> "
+end if
+If PageLink = MaxPages Then Exit for
+Next
+
+if Mypage+1 <=Pagetpage  then
+Next_Page = MyPage + 1
+Response.write "<a class=black href='" & Url & "&page=" & Next_Page & "' title='第" & Next_Page & "页'>下一页</A>"
+end if
+
+if MaxPages > PageShowSize*PageNextSize then
+PageNext = PageShowSize * PageNextSize + 1
+Response.write " <A class=black href='" & Url & "&page=" & Pagetpage & "' title='第"& Pagetpage &"页'>页尾</A>"
+Response.write " <a class=black href='" & Url & "&page=" & PageNext & "' title='下" & PageShowSize & "页'>下一翻页</a>"
+End if
+else
+Response.write "<tr><td align=center>&nbsp;本类暂无信息</td></tr>"
+				
+End If
+Rs3.close
+set rs3=nothing
+%>
+              </td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+      <% case "2" %>
+      <!--新闻模版-->
+      <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+%>
+      <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber4">
+        <tr>
+          <td height="25" background="Images/dh_bg.gif" class="daohang">&nbsp;&nbsp;&nbsp;&nbsp;<img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;<%=E_smallclassname%></td>
+        </tr>
+        <%
+set rs3=server.CreateObject("ADODB.RecordSet")		
+if uselevel=1 then
+if Request.cookies(eChsys)("key")="super" or Request.cookies(eChsys)("key")="typemaster" or Request.cookies(eChsys)("key")="bigmaster" or Request.cookies(eChsys)("key")="smallmaster" or Request.cookies(eChsys)("key")="check" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="selfreg" then
+	if Request.cookies(eChsys)("reglevel")=3 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=2 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=1 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+end if
+else
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+rs3.Open rs3.Source,conn,1,1
+
+if not rs3.EOF then
+Rs3.PageSize     = MyPageSize
+MaxPages         = Rs3.PageCount
+Rs3.absolutepage = MyPage
+total            = Rs3.RecordCount
+
+i = 0
+do until rs3.Eof or i = rs3.PageSize
+
+newsurl="E_ReadNews.asp?NewsID=" & rs3("NewsID")
+newswwwurl=rs3("titleface")
+datetime="<font class=middle>(" & year(rs3("UpdateTime"))  &"年"& Month(rs3("UpdateTime"))  &"月"& Day(rs3("UpdateTime")) &"日)</font>"
+
+if rs3("picname")<>"" then
+img="<font class=pic_word>[图]</font>"
+else
+img=""
+end if
+
+title=trim(rs3("title"))
+title=replace(title,"<br>","")
+%>
+        <tr>
+          <td><div align="center">
+            <table width="100%" border="0" cellpadding="0" cellspacing="0">
+              <tr>
+                <td width="69%" height="18">&nbsp;&nbsp;<img src="IMAGES/point.gif" width="10" height="7" border="0"><%=img%><a class=middle href="<%if rs3("titleface")="无" then %><%=newsurl%><% else %> <%=newswwwurl%><%end if%>" target="_blank" title="<%=htmlencode4(title)%>"><font color="<%=rs3("titlecolor")%>"><%=CutStr(title,38)%></font></a>
+                        <!--标题后评论提示-->
+                        <% if rs3("titlesize")>=1 then %>
+                        <A class=middle HREF="<%=path%>Review.asp?NewsID=<%=rs3("NewsID")%>" target="_blank" ><font color=red><b>评</b></font></A>
+                        <%end if %>
+                        <!--标题后评论提示-->
+                </td>
+                <td width="16%" align="right"><%if showtime="1" then%>
+                        <%=datetime%>
+                        <%end if%>
+                </td>
+                <td width="15%" align="right"><%if year(rs3("updatetime"))=year(date()) and month(rs3("updatetime"))=month(date()) and day(rs3("updatetime"))=day(date()) then%>
+                        <img src="images/new.gif">
+                        <%end if%>
+                        <%if rs3("goodnews")="1" then%>
+                        <img src="images/g.gif" >
+                        <%end if%>
+                </td>
+              </tr>
+            </table>
+            <%
+rs3.MoveNext
+i = i + 1
+loop
+%>
+          </div></td>
+        </tr>
+        <tr>
+          <td><TABLE cellSpacing=0 cellPadding=3 width="100%" align=center border=0 >
+            <tr>
+              <td width="100%" align=center valign="middle">共 <%=total%> 条，当前第 <%=Mypage%>/<%=Maxpages%> 页，每页 <%=MyPageSize%> 条
+                <%
+url="E_SmallClass.asp?E_typeid=" & E_typeid & "&E_BigClassID=" & request_E_BigClassID & "&E_SmallClassID=" & request_E_SmallClassID
+PageNextSize=int((MyPage-1)/PageShowSize)+1
+Pagetpage=int((total-1)/rs3.PageSize)+1
+
+if PageNextSize >1 then
+PagePrev=PageShowSize*(PageNextSize-1)
+Response.write "<a class=black href='" & Url & "&page=" & PagePrev & "' title='上" & PageShowSize & "页'>上一翻页</a> "
+Response.write "<a class=black href='" & Url & "&page=1' title='第1页'>页首</a> "
+end if
+if MyPage-1 > 0 then
+Prev_Page = MyPage - 1
+Response.write "<a class=black href='" & Url & "&page=" & Prev_Page & "' title='第" & Prev_Page & "页'>上一页</a> "
+end if
+
+if Maxpages>=PageNextSize*PageShowSize then
+PageSizeShow = PageShowSize
+Else
+PageSizeShow = Maxpages-PageShowSize*(PageNextSize-1)
+End if
+If PageSizeShow < 1 Then PageSizeShow = 1
+for PageCounterSize=1 to PageSizeShow
+PageLink = (PageCounterSize+PageNextSize*PageShowSize)-PageShowSize
+if PageLink <> MyPage Then
+Response.write "<a class=black href='" & Url & "&page=" & PageLink & "'>[" & PageLink & "]</a> "
+else
+Response.Write "<B>["& PageLink &"]</B> "
+end if
+If PageLink = MaxPages Then Exit for
+Next
+
+if Mypage+1 <=Pagetpage  then
+Next_Page = MyPage + 1
+Response.write "<a class=black href='" & Url & "&page=" & Next_Page & "' title='第" & Next_Page & "页'>下一页</A>"
+end if
+
+if MaxPages > PageShowSize*PageNextSize then
+PageNext = PageShowSize * PageNextSize + 1
+Response.write " <A class=black href='" & Url & "&page=" & Pagetpage & "' title='第"& Pagetpage &"页'>页尾</A>"
+Response.write " <a class=black href='" & Url & "&page=" & PageNext & "' title='下" & PageShowSize & "页'>下一翻页</a>"
+End if
+else
+Response.write "<tr><td><div align=center>&nbsp;本类暂无信息</div></td></tr>"
+				
+End If
+Rs3.close
+set rs3=nothing
+%>
+              </td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+      <% case "3" %>
+      <!--网址模版-->
+      <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+%>
+      <table border="0" cellpadding="0" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber4">
+        <tr>
+          <td height="25" background="Images/dh_bg.gif" class="daohang">&nbsp;&nbsp;<span class="daohang">&nbsp;<img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;&nbsp;<%=E_smallclassname%></span></td>
+        </tr>
+        <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+if uselevel=1 then
+if Request.cookies(eChsys)("key")="super" or Request.cookies(eChsys)("key")="typemaster" or Request.cookies(eChsys)("key")="bigmaster" or Request.cookies(eChsys)("key")="smallmaster" or Request.cookies(eChsys)("key")="check" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="selfreg" then
+	if Request.cookies(eChsys)("reglevel")=3 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=2 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=1 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+end if
+else
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+rs3.Open rs3.Source,conn,1,1
+
+if not rs3.EOF then
+Rs3.PageSize     = MyPageSize
+MaxPages         = Rs3.PageCount
+Rs3.absolutepage = MyPage
+total            = Rs3.RecordCount
+i = 0
+%>
+        <tr>
+          <td><table width="98%" border="1" cellspacing="0" cellpadding="3" bordercolorlight=#cccccc  bordercolordark=#ffffff align="center">
+            <!--网址换行显示1-->
+            <% do until rs3.Eof or i = rs3.PageSize %>
+            <tr>
+              <%
+Content=htmlencode4(rs3("Content"))
+%>
+              <% if not rs3.EOF then %>
+              <td width=50% align=center valign="middle"><div align="center"> <a class=middle href="<%=rs3("Original")%>" target=_blank title="<%=CutStr(nohtml(rs3("Content")),80)%>"> <%=CutStr(rs3("title"),30)%> </a></div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+              <!--网址换行显示2-->
+              <% if not rs3.EOF then %>
+              <td width=50% align=center valign="middle"><div align="center"> <a class=middle href="<%=rs3("Original")%>" target=_blank title="<%=CutStr(nohtml(rs3("Content")),80)%>"> <%=CutStr(rs3("title"),30)%> </a> </div></td>
+              <%rs3.movenext
+i = i + 1
+end if
+%>
+            </tr>
+            <!--网址换行结束-->
+            <%loop%>
+          </table></td>
+        </tr>
+        <tr>
+          <td><TABLE cellSpacing=0 cellPadding=3 width="100%" align=center border=0 >
+            <tr>
+              <td width="100%" align=center valign="middle">共 <%=total%> 条，当前第 <%=Mypage%>/<%=Maxpages%> 页，每页 <%=MyPageSize%> 条
+                <%
+url="E_SmallClass.asp?E_typeid=" & E_typeid & "&E_BigClassID=" & request_E_BigClassID & "&E_SmallClassID=" & request_E_SmallClassID
+PageNextSize=int((MyPage-1)/PageShowSize)+1
+Pagetpage=int((total-1)/rs3.PageSize)+1
+
+if PageNextSize >1 then
+PagePrev=PageShowSize*(PageNextSize-1)
+Response.write "<a class=black href='" & Url & "&page=" & PagePrev & "' title='上" & PageShowSize & "页'>上一翻页</a> "
+Response.write "<a class=black href='" & Url & "&page=1' title='第1页'>页首</a> "
+end if
+if MyPage-1 > 0 then
+Prev_Page = MyPage - 1
+Response.write "<a class=black href='" & Url & "&page=" & Prev_Page & "' title='第" & Prev_Page & "页'>上一页</a> "
+end if
+
+if Maxpages>=PageNextSize*PageShowSize then
+PageSizeShow = PageShowSize
+Else
+PageSizeShow = Maxpages-PageShowSize*(PageNextSize-1)
+End if
+If PageSizeShow < 1 Then PageSizeShow = 1
+for PageCounterSize=1 to PageSizeShow
+PageLink = (PageCounterSize+PageNextSize*PageShowSize)-PageShowSize
+if PageLink <> MyPage Then
+Response.write "<a class=black href='" & Url & "&page=" & PageLink & "'>[" & PageLink & "]</a> "
+else
+Response.Write "<B>["& PageLink &"]</B> "
+end if
+If PageLink = MaxPages Then Exit for
+Next
+
+if Mypage+1 <=Pagetpage  then
+Next_Page = MyPage + 1
+Response.write "<a class=black href='" & Url & "&page=" & Next_Page & "' title='第" & Next_Page & "页'>下一页</A>"
+end if
+
+if MaxPages > PageShowSize*PageNextSize then
+PageNext = PageShowSize * PageNextSize + 1
+Response.write " <A class=black href='" & Url & "&page=" & Pagetpage & "' title='第"& Pagetpage &"页'>页尾</A>"
+Response.write " <a class=black href='" & Url & "&page=" & PageNext & "' title='下" & PageShowSize & "页'>下一翻页</a>"
+End if
+else
+Response.write "<tr><td align=center>&nbsp;本类暂无信息</td></tr>"
+				
+End If
+
+Rs3.close
+set rs3=nothing
+%>
+              </td>
+            </tr>
+          </table></td>
+        </tr>
+      </table>
+      <% case "4" %>
+      <!--软件模版-->
+      <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+%>
+      <table width="100%" border="0" align="center" cellpadding="0" cellspacing="0" >
+        <tr>
+          <td><table border="0" cellpadding="3" cellspacing="0" style="border-collapse: collapse" width="100%" id="AutoNumber4">
+            <tr>
+              <td height="25" background="Images/dh_bg.gif" class="daohang">&nbsp;&nbsp;<span class="daohang">&nbsp;<img src="Images/arrow_dh_1.gif" width="7" height="7">&nbsp;&nbsp;&nbsp;<%=E_smallclassname%> </span></td>
+            </tr>
+          </table>
+                <%
+set rs3=server.CreateObject("ADODB.RecordSet")
+if uselevel=1 then
+if Request.cookies(eChsys)("key")="super" or Request.cookies(eChsys)("key")="typemaster" or Request.cookies(eChsys)("key")="bigmaster" or Request.cookies(eChsys)("key")="smallmaster" or Request.cookies(eChsys)("key")="check" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="" then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+end if
+if Request.cookies(eChsys)("key")="selfreg" then
+	if Request.cookies(eChsys)("reglevel")=3 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=2 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+	if Request.cookies(eChsys)("reglevel")=1 then
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1 ) order by newsid DESC"
+	end if
+end if
+else
+rs3.Source="select * from "& db_EC_News_Table &" where (E_SmallClassID=" & request_E_SmallClassID &" and checkked=1) order by newsid DESC"
+end if
+rs3.Open rs3.Source,conn,1,1
+
+if not rs3.EOF then
+Rs3.PageSize     = MyPageSize
+MaxPages         = Rs3.PageCount
+Rs3.absolutepage = MyPage
+total            = Rs3.RecordCount
+
+i = 0
+do until rs3.Eof or i = rs3.PageSize
+
+newsurl="E_ReadNews.asp?NewsID=" & rs3("NewsID")
+newswwwurl=rs3("titleface")
+datetime="<font class=middle>(" & Month(rs3("UpdateTime"))  &"月"& Day(rs3("UpdateTime")) &"日)</font>"
+
+
+title=htmlencode4(trim(rs3("title")))
+%>
+                <div align="center">
+                  <table width="100%" border="0" cellpadding="0" cellspacing="0">
+                    <tr bgcolor="#EFEFEF">
+                      <td colspan="2">&nbsp;<img src="images/news_img.gif" width="9" height="9" border="0">&nbsp; <a class=middle href="<%if rs3("titleface")="无" then %><%=newsurl%><% else %> <%=newswwwurl%><%end if%>" target="_blank" title="<%=htmlencode4(title)%>"><strong><font color="<%=rs3("titlecolor")%>"> <%=CutStr(title,40)%> </font></strong></a> </td>
+                      <td width="16%" align="right" bgcolor="#EFEFEF"><%if showtime="1" then%>
+                          <%=datetime%>
+                          <%end if%>
+                      </td>
+                      <td width="15%" align="center" bgcolor="#EFEFEF"><div align="right">
+                          <%if year(rs3("updatetime"))=year(date()) and month(rs3("updatetime"))=month(date()) and day(rs3("updatetime"))=day(date()) then%>
+                          <img src="images/new.gif" border="0">
+                          <%end if%>
+                          <%if rs3("goodnews")="1" then%>
+                          <img src="images/g.gif" border="0">
+                          <%end if%>
+                      </div></td>
+                    </tr>
+                    <tr>
+                      <%
+fileExt=lcase(getFileExtName(rs3("picname")))
+Content=htmlencode4(rs3("Content"))
+content=replace(content,"[---分页---]","")%>
+                      <td width="38%"><a class=middle href="<%if rs3("titleface")="无" then %><%=newsurl%><% else %> <%=newswwwurl%><%end if%>" target=_blank title="<%=htmlencode4(rs3("title"))%>">
+                        <%if   rs3("picname")=("")   then%>
+                        <img  src="IMAGES/softno.gif" width="65" height="65" border=0 align="left">
+                        <%else%>
+                        <%if fileext="jpg" or fileext="bmp" or fileext="png" or fileext="gif" then%>
+                        <img  src="<%=FileUploadPath & rs3("picname")%>" width="65" height="65" border=0 align="left">
+                        <%end if%>
+                        <%if fileext="swf" then%>
+                        <object classid='clsid:D27CDB6E-AE6D-11cf-96B8-444553540000'  codebase='http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=5,0,0,0' width="65" height="65" border=0 >
+                          <param name=movie value="<%=FileUploadPath & rs3("picname")%>">
+                          <param name=quality value=high>
+                          <param name='Play' value='-1'>
+                          <param name='Loop' value='0'>
+                          <param name='Menu' value='-1'>
+                          <embed src="<%=FileUploadPath & rs3("picname")%>" width="6" 5height="65" border=0  pluginspage='http://www.macromedia.com/shockwave/download/index.cgi?P1_Prod_Version=ShockwaveFlash' type='application/x-shockwave-flash'></embed>
+                        </object>
+                        <%end if%>
+                        <%end if%>
+                      </a> </td>
+                      <td colspan="3" valign="top"><a class=middle href="<%if rs3("titleface")="无" then %><%=newsurl%><% else %> <%=newswwwurl%><%end if%>" target="_blank" title="<%=htmlencode4(title)%>"><%=CutStr(nohtml(rs3("Content")),250)%></a> </td>
+                    </tr>
+                  </table>
+                  <%
+rs3.MoveNext
+i = i + 1
+loop
+%>
+                  <TABLE cellSpacing=0 cellPadding=0 width="100%" align=center border=0 >
+                    <tr>
+                      <td width="100%" align=center valign="middle">共 <%=total%> 条，当前第 <%=Mypage%>/<%=Maxpages%> 页，每页 <%=MyPageSize%> 条
+                        <%
+url="E_SmallClass.asp?E_typeid=" & E_typeid & "&E_BigClassID=" & request_E_BigClassID & "&E_SmallClassID=" & request_E_SmallClassID
+PageNextSize=int((MyPage-1)/PageShowSize)+1
+Pagetpage=int((total-1)/rs3.PageSize)+1
+
+if PageNextSize >1 then
+PagePrev=PageShowSize*(PageNextSize-1)
+Response.write "<a class=black href='" & Url & "&page=" & PagePrev & "' title='上" & PageShowSize & "页'>上一翻页</a> "
+Response.write "<a class=black href='" & Url & "&page=1' title='第1页'>页首</a> "
+end if
+if MyPage-1 > 0 then
+Prev_Page = MyPage - 1
+Response.write "<a class=black href='" & Url & "&page=" & Prev_Page & "' title='第" & Prev_Page & "页'>上一页</a> "
+end if
+
+if Maxpages>=PageNextSize*PageShowSize then
+PageSizeShow = PageShowSize
+Else
+PageSizeShow = Maxpages-PageShowSize*(PageNextSize-1)
+End if
+If PageSizeShow < 1 Then PageSizeShow = 1
+for PageCounterSize=1 to PageSizeShow
+PageLink = (PageCounterSize+PageNextSize*PageShowSize)-PageShowSize
+if PageLink <> MyPage Then
+Response.write "<a class=black href='" & Url & "&page=" & PageLink & "'>[" & PageLink & "]</a> "
+else
+Response.Write "<B>["& PageLink &"]</B> "
+end if
+If PageLink = MaxPages Then Exit for
+Next
+
+if Mypage+1 <=Pagetpage  then
+Next_Page = MyPage + 1
+Response.write "<a class=black href='" & Url & "&page=" & Next_Page & "' title='第" & Next_Page & "页'>下一页</A>"
+end if
+
+if MaxPages > PageShowSize*PageNextSize then
+PageNext = PageShowSize * PageNextSize + 1
+Response.write " <A class=black href='" & Url & "&page=" & Pagetpage & "' title='第"& Pagetpage &"页'>页尾</A>"
+Response.write " <a class=black href='" & Url & "&page=" & PageNext & "' title='下" & PageShowSize & "页'>下一翻页</a>"
+End if
+else
+Response.Write "<tr><td> <div align='center'> 暂无信息</div></td></tr>"
+				
+End If
+Rs3.close
+set rs3=nothing
+%>
+                      </td>
+                    </tr>
+                  </table>
+                  <!--模版结束-->
+              </div></td>
+        </tr>
+      </table>
+      <% end select%>
+	  <%end if%>
+    </div></td>
+  </tr>
+</table>
+<!--#include file="other_bottom.asp" -->
+</body>
+</html>

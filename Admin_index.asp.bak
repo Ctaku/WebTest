@@ -1,0 +1,35 @@
+<%@ LANGUAGE = VBScript.Encode %>
+<!--#include file="Conn.asp"-->
+<!--#include file="ConnUser.asp"-->
+<!--#include file="config.asp"-->
+<!--'#include file="char.inc"-->
+
+<%#@~^pAIAAA==[b:~Nk	oXKxT@#@&k+OPM/xdD\.R1D+mOnW(LmO`EC9W[4c.+1W.[k+YEb@#@&d;^xr/n^+1YPCP6.WsPE[,N8m`/+MmKm4V~'J,h4+.+~~r[~N(mjk+.mgl:n~LJxBr'"+5!+kYR1WKVk/c+;tdzk#`r;/DxmhnJ*[rBE@#@&.kRGwUPk;sS;WxUik+.~8S8@#@&b0,D/c4KWPKD~DkRnG6PY4nx@#@&dMndwKxk+ Dn[bDnmD~J^WLr	Rld2r@#@&dMnkwG	/R+	N@#@&+	N~k6@#@&%bxoHGxT'DkcELbxTXGxLE*@#@&Dk m^Wdn@#@&/nO,Dd'	GDtr	o@#@&@#@&k6~I;;+kY ^KW3bn/v+Z4dz/*`r3nXEb{JdEanDrPG.,I+5;/OR1GK3r/v+Z4/Hd#vJV+HJbxrmt^3rPWM~]+$E/OR^GK3r+kc+;tdzk#`EFA5E#{E(kLslkY+MJ,GD,In;!+dOcmWKVk/`/4/H/*`E|3er#xJkhl^VhCkY+.E,W.P"n$EnkYcmWK3bn/v+/tkXdbvJ|AeJ*'JDz2+slkYnDE~KD~`"n;!+dOcmWGVb+d`/4/zk#vJ3Xrb'r/nV6DnLrPl	[PNkxTzGxT'Z#~Y4n	@#@&d^r/D'.n$E+dOvJCmDrKxE*@#@&dY9gAAA==^#~@%>
+<html>
+<head>
+<title>后台管理</title>
+<meta http-equiv=Content-Type content=text/html;charset=gb2312>
+<script language="JavaScript">
+<!--
+if (self != top) top.location.href = window.location.href
+//-->
+</script>
+
+<style type="text/css">
+<!--
+.STYLE2 {color: #FF6600}
+-->
+</style>
+</head>
+<frameset rows="35,*" frameborder="NO" border="0" framespacing="0">
+	<frame src="admin_top.asp" noresize="noresize" frameborder="0" name="topFrame" scrolling="no" marginwidth="0" marginheight="0" />
+<frameset rows="*" cols="185,*" id="frame">
+	<frame src="admin_left.asp" name="leftFrame" noresize="noresize" marginwidth="0" marginheight="0" frameborder="0" scrolling="yes" />
+	<frame src="admin_main.asp" name="main" marginwidth="0" marginheight="0" frameborder="0" scrolling="yes" />
+</frameset>
+<noframes>
+	<body></body>
+</noframes>
+</frameset>
+</html>
+<%#@~^eAAAAA==n^/n@#@&i?tKh|3DM`E对不起，管理员尚未开通您的帐号，请等待开通或联系管理员。@!(D@*@!(D@*@!CP4D+6xvk	N6 ld2E@*返回首页@!zm@*J*@#@&7M+/2G	/nRU9@#@&x9Pk6ExcAAA==^#~@%>

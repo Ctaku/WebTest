@@ -1,0 +1,144 @@
+
+BODY{ 
+      background-color: #FFFFFF;MARGIN: 0px; FONT: 9pt 宋体;
+	  color: #2F1701;
+	  SCROLLBAR-FACE-COLOR:#FA7727;
+	  scrollbar-track-color:#FA7727;
+      SCROLLBAR-HIGHLIGHT-COLOR:#F1F7FC;
+      SCROLLBAR-SHADOW-COLOR:#FA7727;
+      SCROLLBAR-ARROW-COLOR:#ffffff;
+      SCROLLBAR-BASE-COLOR:#FA7727; 
+      SCROLLBAR-DARK-SHADOW-COLOR:#FA7727;
+   	   
+	   }
+TD
+{
+FONT-SIZE: 9pt
+}
+
+A:link
+{
+COLOR: #2F1701; 
+TEXT-DECORATION: none
+}
+A:visited
+{
+COLOR: #2F1701;
+TEXT-DECORATION: none 
+}
+A:active
+{
+COLOR: red;
+TEXT-DECORATION: none
+}
+A:hover
+{
+COLOR: #FF0000;
+TEXT-DECORATION: none
+}
+INPUT {
+FONT-SIZE: 12px;
+FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;
+COLOR: #2F1701;
+BORDER-RIGHT: #FEA970 1px solid;
+BORDER-TOP: #FEA970 1px solid;
+BORDER-LEFT: #FEA970 1px solid;
+PADDING-TOP: 2px;
+BORDER-BOTTOM:#FEA970 1px solid;
+HEIGHT: 20px
+}
+
+TEXTAREA
+{
+FONT-SIZE: 12px;
+FONT-FAMILY: Verdana, Arial, Helvetica, sans-serif;
+COLOR: #2F1701;
+BORDER-RIGHT: #FEA970 1px solid;
+BORDER-TOP: #FEA970 1px solid;
+BORDER-LEFT: #FEA970 1px solid;
+PADDING-TOP: 2px;
+BORDER-BOTTOM:#FEA970 1px solid;
+}
+SELECT
+{
+FONT-SIZE: 9pt;
+FONT-FAMILY: Verdana, Arial, 宋体;
+background-color:#FEEBE4;
+COLOR: #2F1701;
+ 
+
+}
+
+.Up
+{border-left: 1Px solid rgb(12,12,12);
+border-right: 1px solid rgb(12,12,12);
+border-bottom: 1px solid rgb(12,12,12);
+border-top: 1px solid rgb(12,12,12);
+cursor:hand;
+}
+.Down
+{border-right: 1Px solid rgb(233,244,249);
+border-left: 1px solid rgb(12,12,12);
+border-top: 1px solid rgb(12,12,12);
+border-bottom: 1px solid rgb(233,244,249);
+cursor:hand;
+}
+.None
+{border-right: 1Px solid rgb(255,255,255);
+border-left: 1px solid rgb(255,255,255);
+border-top: 1px solid rgb(255,255,255);
+border-bottom: 1px solid rgb(255,255,255);
+cursor:hand;
+}
+.TDtop
+{
+	FONT-SIZE: 9pt;
+    FONT-FAMILY: Verdana, Arial, 宋体;
+	color:#FFFFFF; font-weight:bold;
+	background-color: #FF9933;
+	border: #FFFFFF; background-image:url(Images/admin_topbg.gif)
+}
+.TDtop1
+{
+	FONT-SIZE: 9pt;
+	background-color: #FEEBE4;
+	border: #FFFFFF;
+}
+.title
+{   FONT-SIZE: 9pt;
+    FONT-FAMILY: Verdana, Arial, 宋体;
+	color:#FFFFFF; font-weight:bold;
+}
+.sec_menu {
+ border-left:1px solid #ffffff; border-right:1px solid #ffffff; border-bottom:1px solid #ffffff; overflow:hidden; background:#FDECE1; }
+}
+.menu_title {
+	
+}
+.menu_title SPAN {
+	FONT-WEIGHT: bold; LEFT: 8px; COLOR: #990000; POSITION: relative; TOP: 2px
+}
+.menu_title2 {
+	CURSOR: hand;color: #D40707;font-size: 12px;font-weight:bold;height: 25; 
+}
+.menu_title2 SPAN {
+	FONT-WEIGHT: bold; LEFT: 8px; COLOR: #FF3300; POSITION: relative; TOP: 2px
+}
+.menu_title1 {color: #C30202;font-size: 12px;font-weight:bold;height: 25; }
+.sec_menu1 {border-left:2px solid #335EA8; border-right:2px solid #335EA8; border-bottom:2px solid #335EA8; overflow:hidden; background:#EEEEE3; }
+
+TABLE {
+	BORDER-RIGHT: 0px; BORDER-TOP: 0px; BORDER-LEFT: 0px; BORDER-BOTTOM: 0px
+}
+TD {
+	FONT: 12px 宋体
+}
+IMG {
+	BORDER-RIGHT: 0px; BORDER-TOP: 0px; VERTICAL-ALIGN: bottom; BORDER-LEFT: 0px; BORDER-BOTTOM: 0px
+}
+A {
+	FONT: 12px 宋体; COLOR: #000000; TEXT-DECORATION: none
+}
+A:hover {
+	COLOR: #FF0000; TEXT-DECORATION: none
+}
